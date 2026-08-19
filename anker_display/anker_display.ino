@@ -39,7 +39,7 @@
   SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
   Copyright (c) 2026 Detlev Euskirchen
 */
-#define FW_VERSION "1.30.0"
+#define FW_VERSION "1.31.0"
 
 // Ausfuehrliche Ausgaben im seriellen Monitor.
 //   1 = jede MQTT-Nachricht wird protokolliert (zum Mitlesen und Decodieren)
@@ -162,6 +162,12 @@ static AnkerData gData;
 // Weboberflaeche umgeschaltet; der Stand ueberdauert Neustarts bewusst nicht.
 static int gPage = 0;
 #define PAGES 2
+
+// Die Wetterseite ist ein kurzer Blick, keine Dauereinstellung: 10 s nach dem
+// Umschalten geht die Anzeige von selbst zurueck auf die Messwerte. gPageSince
+// haelt fest, wann umgeschaltet wurde.
+static unsigned long gPageSince = 0;
+#define WEATHER_SHOW_MS 10000UL
 
 // ── Wettervorhersage ────────────────────────────────────────────────────────
 // Quelle: open-meteo.com - kostenlos, ohne Anmeldung und ohne Schluessel.
@@ -849,7 +855,8 @@ void handleStatus(){
     "<p style='color:#888;font-size:.8rem;margin-bottom:12px'>"
     "Anzeige auf dem Display: "
     "<a style='color:%s' href='/page?v=0'>Messwerte</a> &middot; "
-    "<a style='color:%s' href='/page?v=1'>Wetter</a></p>"
+    "<a style='color:%s' href='/page?v=1'>Wetter</a> "
+    "<span style='color:#555'>(Wetter springt nach 10 s zur&uuml;ck)</span></p>"
     "<p style='color:#888;font-size:.8rem;margin-bottom:12px'>"
     "Standort f&uuml;rs Wetter (z.B. 51.5467 / 6.6006): "
     "<form style='display:inline' action='/geo'>"
@@ -1055,6 +1062,7 @@ void handlePage(){
   int v=server.arg("v").toInt();
   if(v>=0 && v<PAGES){
     gPage=v;
+    gPageSince=millis();
     lcd.fillScreen(C_BLACK);
     drawDisplay();
     Serial.printf("[LCD] Seite %d\n",v);
@@ -2771,6 +2779,14 @@ void loop(){
     gMqttLastTry=now;
     Serial.println("[MQTT] Getrennt – neuer Versuch");
     mqttConnect();
+  }
+  // Wetterseite laeuft nach 10 s ab - ohne Touch gaebe es sonst keinen
+  // bequemen Weg zurueck zu den Messwerten.
+  if(gPage==1 && now-gPageSince>=WEATHER_SHOW_MS){
+    gPage=0;
+    lcd.fillScreen(C_BLACK);
+    drawDisplay();
+    Serial.println("[LCD] Wetter vorbei – zurueck auf Messwerte");
   }
   // REST-Abfrage entfaellt – die Daten kommen jetzt per MQTT.
   // Anzeige hoechstens alle 2 s neu zeichnen, sonst flackert es bei 3-s-Daten.

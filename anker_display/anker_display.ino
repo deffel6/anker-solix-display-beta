@@ -39,7 +39,7 @@
   SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
   Copyright (c) 2026 Detlev Euskirchen
 */
-#define FW_VERSION "1.31.0"
+#define FW_VERSION "1.32.0"
 
 // Ausfuehrliche Ausgaben im seriellen Monitor.
 //   1 = jede MQTT-Nachricht wird protokolliert (zum Mitlesen und Decodieren)
@@ -2781,8 +2781,11 @@ void loop(){
     mqttConnect();
   }
   // Wetterseite laeuft nach 10 s ab - ohne Touch gaebe es sonst keinen
-  // bequemen Weg zurueck zu den Messwerten.
-  if(gPage==1 && now-gPageSince>=WEATHER_SHOW_MS){
+  // bequemen Weg zurueck zu den Messwerten. Bewusst millis() statt now:
+  // now stammt vom Schleifenanfang, gPageSince wird aber mittendrin in
+  // handlePage() gesetzt und ist dann groesser. Die vorzeichenlose Differenz
+  // wird dabei riesig statt negativ - mit now sprang die Seite sofort zurueck.
+  if(gPage==1 && millis()-gPageSince>=WEATHER_SHOW_MS){
     gPage=0;
     lcd.fillScreen(C_BLACK);
     drawDisplay();

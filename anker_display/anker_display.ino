@@ -39,7 +39,7 @@
   SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
   Copyright (c) 2026 Detlev Euskirchen
 */
-#define FW_VERSION "1.29.0"
+#define FW_VERSION "1.30.0"
 
 // Ausfuehrliche Ausgaben im seriellen Monitor.
 //   1 = jede MQTT-Nachricht wird protokolliert (zum Mitlesen und Decodieren)
@@ -568,9 +568,9 @@ const char HTML_PAGE[] PROGMEM = R"HTML(
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Anker Display Setup</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
+*{box-sizing:border-box;margin:0;padding:0}html{font-size:18px}
 body{font-family:-apple-system,sans-serif;background:#0a0a0a;color:#eee;display:flex;justify-content:center;padding:20px}
-.card{background:#1a1a1a;border-radius:16px;padding:28px;width:100%;max-width:420px;box-shadow:0 4px 24px #0008}
+.card{background:#1a1a1a;border-radius:16px;padding:28px;width:100%;max-width:470px;box-shadow:0 4px 24px #0008}
 h1{font-size:1.4rem;margin-bottom:6px;color:#fff}.sub{color:#888;font-size:.85rem;margin-bottom:24px}
 .section{background:#111;border-radius:10px;padding:16px;margin-bottom:16px}
 .section h2{font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;color:#f0a500;margin-bottom:12px}
@@ -608,9 +608,9 @@ const char HTML_PAGE_FIX[] PROGMEM = R"HTML(
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Anker Login korrigieren</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
+*{box-sizing:border-box;margin:0;padding:0}html{font-size:18px}
 body{font-family:-apple-system,sans-serif;background:#0a0a0a;color:#eee;display:flex;justify-content:center;padding:20px}
-.card{background:#1a1a1a;border-radius:16px;padding:28px;width:100%;max-width:420px;box-shadow:0 4px 24px #0008}
+.card{background:#1a1a1a;border-radius:16px;padding:28px;width:100%;max-width:470px;box-shadow:0 4px 24px #0008}
 h1{font-size:1.4rem;margin-bottom:6px;color:#fff}.sub{color:#f66;font-size:.85rem;margin-bottom:24px}
 .section{background:#111;border-radius:10px;padding:16px;margin-bottom:16px}
 .section h2{font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;color:#f0a500;margin-bottom:12px}
@@ -651,9 +651,9 @@ String buildSiteSelectPage() {
   String p = F("<!DOCTYPE html><html lang='de'><head>"
     "<meta charset='UTF-8'><meta name='viewport' content='width=device-width,initial-scale=1'>"
     "<title>Anlage waehlen</title><style>"
-    "*{box-sizing:border-box;margin:0;padding:0}"
+    "*{box-sizing:border-box;margin:0;padding:0}html{font-size:18px}"
     "body{font-family:-apple-system,sans-serif;background:#0a0a0a;color:#eee;display:flex;justify-content:center;padding:20px}"
-    ".card{background:#1a1a1a;border-radius:16px;padding:28px;width:100%;max-width:420px;box-shadow:0 4px 24px #0008}"
+    ".card{background:#1a1a1a;border-radius:16px;padding:28px;width:100%;max-width:470px;box-shadow:0 4px 24px #0008}"
     "h1{font-size:1.4rem;margin-bottom:6px;color:#fff}.sub{color:#888;font-size:.85rem;margin-bottom:24px}"
     ".site-btn{display:block;width:100%;padding:16px;background:#111;border:1px solid #2a2a3a;"
     "border-radius:12px;color:#fff;text-decoration:none;margin-bottom:12px;text-align:left;"
@@ -786,10 +786,10 @@ void handleStatus(){
     "<!DOCTYPE html><html lang='de'><head><meta charset='UTF-8'>"
     "<meta name='viewport' content='width=device-width,initial-scale=1'>"
     "<title>%s &ndash; Anker Display</title><style>"
-    "*{box-sizing:border-box;margin:0;padding:0}"
+    "*{box-sizing:border-box;margin:0;padding:0}html{font-size:18px}"
     "body{font-family:-apple-system,sans-serif;background:#0a0a0a;color:#eee;"
     "display:flex;justify-content:center;padding:20px}"
-    ".card{background:#1a1a1a;border-radius:16px;padding:26px;width:100%%;max-width:420px}"
+    ".card{background:#1a1a1a;border-radius:16px;padding:26px;width:100%%;max-width:470px}"
     "h1{font-size:1.3rem;margin-bottom:2px}.sub{color:#888;font-size:.85rem;margin-bottom:22px}"
     "table{width:100%%;border-collapse:collapse;margin-bottom:22px}"
     "td{padding:9px 0;border-bottom:1px solid #262626;font-size:.95rem}"
@@ -922,10 +922,10 @@ void handlePacks(){
          "<meta name='viewport' content='width=device-width,initial-scale=1'>"
          "<meta http-equiv='refresh' content='30'>"
          "<title>Akkupacks</title><style>"
-         "*{box-sizing:border-box;margin:0;padding:0}"
+         "*{box-sizing:border-box;margin:0;padding:0}html{font-size:18px}"
          "body{font-family:-apple-system,sans-serif;background:#0a0a0a;color:#eee;"
          "display:flex;justify-content:center;padding:20px}"
-         ".card{background:#1a1a1a;border-radius:16px;padding:24px;width:100%;max-width:560px}"
+         ".card{background:#1a1a1a;border-radius:16px;padding:24px;width:100%;max-width:620px}"
          "h1{font-size:1.25rem;margin-bottom:18px}"
          "h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.09em;"
          "color:#f0a500;margin:20px 0 8px}"

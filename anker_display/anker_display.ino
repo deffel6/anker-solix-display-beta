@@ -39,7 +39,7 @@
   SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
   Copyright (c) 2026 Detlev Euskirchen
 */
-#define FW_VERSION "1.32.0"
+#define FW_VERSION "1.33.0"
 
 // Ausfuehrliche Ausgaben im seriellen Monitor.
 //   1 = jede MQTT-Nachricht wird protokolliert (zum Mitlesen und Decodieren)
@@ -145,6 +145,10 @@ struct Config {
   // Standort fuer die Wettervorhersage. 0/0 = noch nicht gesetzt, dann
   // bleibt die Wetterseite leer.
   float  lat = 0, lon = 0;
+  // Automatischer Seitenwechsel: Minuten zwischen zwei Wetter-Einblendungen.
+  // 0 = aus. Die Wetterseite verschwindet danach von selbst nach 10 Sekunden,
+  // der Weg zurueck ist also schon geregelt.
+  int    autoPageMin = 0;
   // Seriennummer der gewaehlten Solarbank. Leer = automatisch (dekodierte
   // Generationen zuerst); gesetzt wird sie ueber die Weboberflaeche.
   String devSn;
@@ -514,6 +518,7 @@ void loadConfig() {
   cfg.nightTo   =prefs.getInt("nto",-1);
   cfg.lat       =prefs.getFloat("lat",0);
   cfg.lon       =prefs.getFloat("lon",0);
+  cfg.autoPageMin=prefs.getInt("autopg",0);
   cfg.devSn     =prefs.getString("devsn","");
   gStableSeen   =prefs.getString("seenstab","");
   prefs.end();
@@ -533,6 +538,7 @@ void saveConfig() {
   prefs.putInt("nto",cfg.nightTo);
   prefs.putFloat("lat",cfg.lat);
   prefs.putFloat("lon",cfg.lon);
+  prefs.putInt("autopg",cfg.autoPageMin);
   prefs.putString("devsn",cfg.devSn);
   prefs.end(); Serial.println("[Prefs] OK");
 }
@@ -858,6 +864,12 @@ void handleStatus(){
     "<a style='color:%s' href='/page?v=1'>Wetter</a> "
     "<span style='color:#555'>(Wetter springt nach 10 s zur&uuml;ck)</span></p>"
     "<p style='color:#888;font-size:.8rem;margin-bottom:12px'>"
+    "Wetter von selbst zeigen: "
+    "<a style='color:%s' href='/autopage?v=0'>aus</a> &middot; "
+    "<a style='color:%s' href='/autopage?v=1'>jede Minute</a> &middot; "
+    "<a style='color:%s' href='/autopage?v=5'>alle 5 min</a> &middot; "
+    "<a style='color:%s' href='/autopage?v=15'>alle 15 min</a>%s</p>"
+    "<p style='color:#888;font-size:.8rem;margin-bottom:12px'>"
     "Standort f&uuml;rs Wetter (z.B. 51.5467 / 6.6006): "
     "<form style='display:inline' action='/geo'>"
     "<input name='lat' type='text' inputmode='decimal' value='%s' placeholder='Breite' "
@@ -911,6 +923,14 @@ void handleStatus(){
     updRow.c_str(),
     bankRow.c_str(),
     gPage==0?"#fff":"#f0a500", gPage==1?"#fff":"#f0a500",
+    cfg.autoPageMin== 0?"#fff":"#f0a500",
+    cfg.autoPageMin== 1?"#fff":"#f0a500",
+    cfg.autoPageMin== 5?"#fff":"#f0a500",
+    cfg.autoPageMin==15?"#fff":"#f0a500",
+    // Ohne Standort bliebe die eingeblendete Wetterseite leer - dann sagen
+    // wir es gleich hier, statt den Nutzer raten zu lassen.
+    (cfg.autoPageMin>0 && cfg.lat==0 && cfg.lon==0)
+      ? " <span style='color:#f66'>&ndash; erst Standort setzen</span>" : "",
     latS, lonS,
     cfg.bright, cfg.bright, nf, nt,
     cfg.nightFrom>=0
@@ -1070,6 +1090,20 @@ void handlePage(){
   server.sendHeader("Location","/"); server.send(302);
 }
 
+// Automatischen Seitenwechsel einstellen: Minuten zwischen zwei
+// Wetter-Einblendungen, 0 schaltet ihn ab. gPageSince wird zurueckgesetzt,
+// damit die Wartezeit ab dem Klick zaehlt und nicht ab dem letzten Wechsel.
+void handleAutoPage(){
+  int v=server.arg("v").toInt();
+  if(v>=0 && v<=60){
+    cfg.autoPageMin=v;
+    saveConfig();
+    gPageSince=millis();
+    Serial.printf("[LCD] Wetter automatisch: %d min\n",v);
+  }
+  server.sendHeader("Location","/"); server.send(302);
+}
+
 // Standort fuer die Wettervorhersage setzen. Kommt mit Komma und Punkt
 // zurecht - deutsche Browser liefern je nach Feldtyp beides. Werte nahe
 // 0/0 (Golf von Guinea) sind mit Sicherheit ein Eingabefehler und werden
@@ -1176,6 +1210,7 @@ void startWebUi(){
   server.on("/night",      HTTP_GET,  handleNight);
   server.on("/page",       HTTP_GET,  handlePage);
   server.on("/geo",        HTTP_GET,  handleGeo);
+  server.on("/autopage",   HTTP_GET,  handleAutoPage);
   server.on("/device",     HTTP_GET,  handleDevice);
   server.on("/updok",      HTTP_GET,  handleUpdOk);
   server.on("/updcheck",   HTTP_GET,  handleUpdCheck);
@@ -2787,9 +2822,20 @@ void loop(){
   // wird dabei riesig statt negativ - mit now sprang die Seite sofort zurueck.
   if(gPage==1 && millis()-gPageSince>=WEATHER_SHOW_MS){
     gPage=0;
+    gPageSince=millis();      // sonst blendet die Automatik sofort wieder ein
     lcd.fillScreen(C_BLACK);
     drawDisplay();
     Serial.println("[LCD] Wetter vorbei – zurueck auf Messwerte");
+  }
+  // Automatik: alle paar Minuten das Wetter von selbst einblenden. Ohne
+  // Standort bleibt es aus - die Seite haette sonst nichts zu zeigen.
+  if(cfg.autoPageMin>0 && gPage==0 && (cfg.lat!=0 || cfg.lon!=0)
+     && millis()-gPageSince>=(unsigned long)cfg.autoPageMin*60000UL){
+    gPage=1;
+    gPageSince=millis();
+    lcd.fillScreen(C_BLACK);
+    drawDisplay();
+    Serial.println("[LCD] Automatisch: Wetter");
   }
   // REST-Abfrage entfaellt – die Daten kommen jetzt per MQTT.
   // Anzeige hoechstens alle 2 s neu zeichnen, sonst flackert es bei 3-s-Daten.
